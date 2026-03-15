@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>旗当番表ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg: #f5f5f7; --card: #ffffff; --accent: #0071e3; --text: #1d1d1f;
+            --text-s: #86868b; --border: #d2d2d7; --red: #ff3b30; --blue: #007aff;
+        }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        .wrapper { width: 100%; padding: 10px; box-sizing: border-box; }
+        .panel { 
+            background: var(--card); border-radius: 16px; padding: 16px; 
+            width: 100%; max-width: 450px; margin: 0 auto 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { font-size: 18px; margin: 0 0 15px; text-align: center; }
+        label { font-size: 11px; font-weight: bold; color: var(--text-s); margin-bottom: 5px; display: block; }
+        textarea { 
+            width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 10px; 
+            padding: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; 
+        }
+        .calendar-container { border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 20px; background: #fff; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .cal-head-cell { font-size: 10px; text-align: center; color: var(--text-s); padding-bottom: 5px; }
+        .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; border-radius: 50%; min-height: 40px; }
+        .selected { background: #1d1d1f !important; color: #fff !important; font-weight: bold; }
+        .sun { color: var(--red); } .sat { color: var(--blue); }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+        .btn-main { background: var(--accent); color: white; }
+        .btn-sub { background: white; color: var(--accent); border: 1px solid var(--accent); }
+        #error-log { color: red; font-size: 10px; margin-bottom: 10px; }
+        @media screen and (min-width: 1024px) {
+            .wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 30px; padding: 40px; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <div class="panel">
+        <h1>旗当番表作成</h1>
+        <div id="error-log"></div>
+        <label>A班 メンバー</label>
+        <textarea id="groupA"></textarea>
+        <label>B班 メンバー</label>
+        <textarea id="groupB"></textarea>
+        <label>当番の日を選択</label>
+        <div class="calendar-container">
+            <div class="cal-header">
+                <span id="calMonth" style="font-weight:bold;"></span>
+                <div>
+                    <button type="button" onclick="changeMonth(-1)">‹</button>
+                    <button type="button" onclick="changeMonth(1)">›</button>
+                </div>
+            </div>
+            <div id="calGrid" class="cal-grid"></div>
+        </div>
+        <button class="btn btn-main" onclick="generateTable()">表を生成する</button>
+        <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
+    </div>
+    <div id="print-area" style="background:#fff; width:100%; max-width:500px; padding:20px; margin:0 auto;">
+        <div id="outTitle" style="font-weight:bold; text-align:center; margin-bottom:15px;"></div>
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    var selectedDates = {};
+    var currentViewDate = new Date();
+
+    window.onerror = function(msg, url, line) {
+        document.getElementById('error-log').innerHTML += "Error: " + msg + " (L" + line + ")<br>";
+    };
+
+    window.onload = function() {
+        renderCalendar();
+    };
+
+    function renderCalendar() {
+        var grid = document.getElementById('calGrid');
+        var monthLabel = document.getElementById('calMonth');
+        grid.innerHTML = "";
+        
+        var year = currentViewDate.getFullYear();
+        var month = currentViewDate.getMonth();
+        monthLabel.innerHTML = year + "年 " + (month + 1) + "月";
+
+        var days = ["日", "月", "火", "水", "木", "金", "土"];
+        for(var i=0; i<7; i++) {
+            var h = document.createElement('div');
+            h.className = 'cal-head-cell' + (i==0?' sun':(i==6?' sat':''));
+            h.innerHTML = days[i];
+            grid.appendChild(h);
+        }
+
+        var firstDay = new Date(year, month, 1).getDay();
+        var lastDate = new Date(year, month + 1, 0).getDate();
+        
+        for(var j=0; j<firstDay; j++) grid.appendChild(document.createElement('div'));
+        
+        for(var d=1; d<=lastDate; d++) {
+            (function(dateNum) {
+                var cell = document.createElement('div');
+                var dObj = new Date(year, month, dateNum);
+                var dow = dObj.getDay();
+                var dateKey = year + "-" + (month+1) + "-" + dateNum;
+                
+                cell.className = 'cal-cell' + (dow==0?' sun':(dow==6?' sat':''));
+                if(selectedDates[dateKey]) cell.className += ' selected';
+                cell.innerHTML = dateNum;
+                
+                cell.onclick = function() {
+                    if(selectedDates[dateKey]) {
+                        delete selectedDates[dateKey];
+                        this.classList.remove('selected');
+                    } else {
+                        selectedDates[dateKey] = true;
+                        this.classList.add('selected');
+                    }
+                };
+                grid.appendChild(cell);
+            })(d);
+        }
+    }
+
+    function changeMonth(n) {
+        currentViewDate.setMonth(currentViewDate.getMonth() + n);
+        renderCalendar();
+    }
+
+    function generateTable() {
+        var memA = document.getElementById('groupA').value.split('\n').filter(function(v){return v!==""});
+        var memB = document.getElementById('groupB').value.split('\n').filter(function(v){return v!==""});
+        var dates = Object.keys(selectedDates).sort(function(a,b){
+            return new Date(a.replace(/-/g,'/')) - new Date(b.replace(/-/g,'/'));
+        });
+        
+        if(!dates.length) { alert("日付を選んでください"); return; }
+        
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = "<tr><th style='border-bottom:1px solid #000'>日付</th><th style='border-bottom:1px solid #000'>当番</th></tr>";
+        
+        for(var i=0; i<dates.length; i++) {
+            var d = new Date(dates[i].replace(/-/g,'/'));
+            var row = tbody.insertRow();
+            var dayNames = ["日","月","火","水","木","金","土"];
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            cell1.style.padding = "10px";
+            cell1.style.textAlign = "center";
+            cell1.innerHTML = (d.getMonth()+1)+"/"+d.getDate()+"("+dayNames[d.getDay()]+")";
+            if(d.getDay()==0) cell1.style.color = "red";
+            if(d.getDay()==6) cell1.style.color = "blue";
+            cell2.innerHTML = memA[i%memA.length] + " / " + memB[i%memB.length];
+            cell2.style.textAlign = "center";
+        }
+        document.getElementById('outTitle').innerHTML = (new Date(dates[0].replace(/-/g,'/')).getMonth()+1) + "月 旗当番表";
+    }
+
+    function saveAsImage() {
+        html2canvas(document.getElementById('print-area'), {scale:2}).then(function(canvas) {
+            var link = document.createElement('a');
+            link.href = canvas.toDataURL();
+            link.download = '当番表.png';
+            link.click();
+        });
+    }
+</script>
+</body>
+</html>
