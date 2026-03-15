@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旗当番表ジェネレーター</title>
+    <title>旗当番作成ツール</title>
     <script>
         if (navigator.userAgent.indexOf('Line') > -1 && !location.search.includes('openExternalBrowser=1')) {
             location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
@@ -15,7 +15,7 @@
         :root { --primary: #4a90e2; --accent: #e74c3c; --bg: #f8f9fa; }
         body { font-family: sans-serif; background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); }
+        h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin-top: 0; }
         label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.9rem; }
         textarea, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 5px; }
@@ -28,106 +28,3 @@
         #capture-area { padding: 30px; background: white; border: 1px solid #eee; }
         .output-table { width: 100%; border-collapse: collapse; color: black; }
         .output-table th, .output-table td { border: 1px solid #333; padding: 12px; text-align: center; }
-        .output-table th { background: #f2f2f2; }
-        .bikou-area { margin-top: 20px; text-align: left; line-height: 1.6; }
-        .bikou-red { color: var(--accent); font-weight: bold; }
-        #save-btn { background: #2ecc71; margin-top: 15px; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>旗当番表ジェネレーター</h1>
-    <label>メンバー（1行に1人）</label>
-    <textarea id="members" rows="5" placeholder="田中&#10;佐藤&#10;鈴木"></textarea>
-    <label>当番の日を選択</label>
-    <div id="calendar" class="date-grid"></div>
-    <label>備考1（通常）</label>
-    <input type="text" id="bikou1">
-    <label>備考2（重要・赤字）</label>
-    <input type="text" id="bikou2">
-    <button onclick="generateTable()">表を生成する</button>
-</div>
-
-<div id="result-container">
-    <div id="capture-area">
-        <h2 style="text-align: center; margin-top: 0; color: black;">旗当番割当表</h2>
-        <table class="output-table">
-            <thead>
-                <tr><th style="width: 30%;">日付</th><th>当番A</th><th>当番B</th></tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
-        <div class="bikou-area">
-            <div id="out-bikou1" style="color: black;"></div>
-            <div id="out-bikou2" class="bikou-red"></div>
-        </div>
-    </div>
-    <button id="save-btn" onclick="saveAsImage()">LINE配布用に保存</button>
-</div>
-
-<script>
-    let selectedDates = [];
-    const calendarEl = document.getElementById('calendar');
-
-    function initCalendar() {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getDate() > 25 ? now.getMonth() + 1 : now.getMonth();
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        for (let i = 1; i <= lastDay; i++) {
-            const date = new Date(year, month, i);
-            const holiday = JapaneseHolidays.isHoliday(date);
-            const dEl = document.createElement('div');
-            dEl.className = 'date-item' + (holiday ? ' holiday' : '');
-            dEl.innerHTML = i + (holiday ? `<span class="holiday-name">${holiday}</span>` : '');
-            dEl.onclick = () => {
-                dEl.classList.toggle('selected');
-                const dStr = (month + 1) + '/' + i;
-                if (dEl.classList.contains('selected')) {
-                    if (!selectedDates.includes(dStr)) selectedDates.push(dStr);
-                } else {
-                    selectedDates = selectedDates.filter(d => d !== dStr);
-                }
-            };
-            calendarEl.appendChild(dEl);
-        }
-    }
-
-    function generateTable() {
-        const mems = document.getElementById('members').value.split('\n').map(n => n.trim()).filter(n => n);
-        if (!mems.length || !selectedDates.length) return alert("メンバーと日付を入力してください");
-        
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = "";
-        
-        // 日付順にソート（2026年想定）
-        selectedDates.sort((a, b) => {
-            const da = a.split('/'); const db = b.split('/');
-            return new Date(2026, da[0]-1, da[1]) - new Date(2026, db[0]-1, db[1]);
-        });
-
-        // 二人体制のコアロジック
-        selectedDates.forEach((date, i) => {
-            const personA = mems[(i * 2) % mems.length];
-            const personB = mems[(i * 2 + 1) % mems.length];
-            tbody.innerHTML += `<tr><td>${date}</td><td>${personA}</td><td>${personB}</td></tr>`;
-        });
-
-        document.getElementById('out-bikou1').innerText = document.getElementById('bikou1').value;
-        document.getElementById('out-bikou2').innerText = document.getElementById('bikou2').value;
-        document.getElementById('result-container').style.display = "block";
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-
-    async function saveAsImage() {
-        const canvas = await html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#ffffff" });
-        const link = document.createElement('a');
-        link.download = `旗当番表.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    }
-    initCalendar();
-</script>
-</body>
-</html>
