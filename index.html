@@ -9,50 +9,63 @@
         :root {
             --bg: #f5f5f7; --card: #ffffff; --accent: #0071e3; --text: #1d1d1f;
             --text-s: #86868b; --border: #d2d2d7; --red: #ff3b30; --blue: #007aff;
-            --highlight: #fff9c4; --highlight-border: #ffcc00;
         }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        .wrapper { width: 100%; padding: 10px; box-sizing: border-box; }
-        .panel { background: var(--card); border-radius: 16px; padding: 16px; width: 100%; max-width: 450px; margin: 0 auto 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h1 { font-size: 18px; margin: 0 0 15px; text-align: center; }
-        label { font-size: 11px; font-weight: bold; color: var(--text-s); margin-bottom: 5px; display: block; }
-        textarea { width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; background: #fff; }
+        .wrapper { width: 100%; padding: 5px; box-sizing: border-box; }
+        .panel { background: var(--card); border-radius: 12px; padding: 12px; width: 100%; max-width: 450px; margin: 0 auto 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { font-size: 16px; margin: 0 0 10px; text-align: center; }
         
-        .calendar-container { border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 20px; background: #fff; }
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-        .cal-head-cell { font-size: 10px; text-align: center; color: var(--text-s); padding-bottom: 5px; }
-        .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; border-radius: 50%; min-height: 40px; }
+        /* ラベルと入力欄をタイトに */
+        label { font-size: 10px; font-weight: bold; color: var(--text-s); margin-bottom: 2px; display: block; }
+        textarea { 
+            width: 100%; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            padding: 8px; 
+            margin-bottom: 8px; 
+            font-size: 15px; 
+            box-sizing: border-box; 
+            background: #fff;
+            line-height: 1.2;
+            resize: none; /* 手動リサイズ不可 */
+        }
+        
+        /* カレンダーをコンパクトに */
+        .calendar-container { border: 1px solid var(--border); border-radius: 10px; padding: 8px; margin-bottom: 10px; background: #fff; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .cal-month-label { font-size: 14px; font-weight: bold; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
+        .cal-head-cell { font-size: 9px; text-align: center; color: var(--text-s); padding-bottom: 2px; }
+        .cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; cursor: pointer; border-radius: 50%; min-height: 35px; }
         .selected { background: #1d1d1f !important; color: #fff !important; font-weight: bold; }
         .sun { color: var(--red); } .sat { color: var(--blue); }
 
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; margin-bottom: 10px; font-size: 16px; cursor: pointer; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 10px; font-weight: bold; margin-bottom: 8px; font-size: 15px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sub { background: white; color: var(--accent); border: 1px solid var(--accent); }
 
-        /* プレビューエリア */
-        #print-area { background: #fff; width: 100%; max-width: 500px; padding: 25px 15px; margin: 0 auto; border-radius: 8px; }
+        /* 保存用エリア */
+        #print-area { background: #fff; width: 100%; max-width: 500px; padding: 20px 10px; margin: 0 auto; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-        th { border-bottom: 1.5px solid #000; padding: 10px 0; }
-        td { border-bottom: 1px solid #f2f2f7; padding: 12px 0; text-align: center; }
+        th { border-bottom: 1.5px solid #000; padding: 8px 0; }
+        td { border-bottom: 1px solid #f2f2f7; padding: 10px 0; text-align: center; }
 
-        .name-tag { display: inline-block; width: 90%; padding: 8px 0; border-radius: 6px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+        .name-tag { display: inline-block; width: 90%; padding: 6px 0; border-radius: 6px; cursor: pointer; user-select: none; }
         .name-tag.active { background: #ffcc00 !important; color: #000 !important; font-weight: bold; }
 
-        /* ★備考欄の文字色を赤（#ff3b30）に設定 */
         #outBikou { 
-            margin-top: 25px; 
-            padding-top: 15px; 
+            margin-top: 20px; 
+            padding-top: 10px; 
             border-top: 1px solid #eee; 
             font-size: 13px; 
-            color: #ff3b30; 
+            color: #ff3b30 !important; 
             white-space: pre-wrap; 
-            line-height: 1.6;
-            display: none; /* 初期は非表示 */
+            line-height: 1.5;
+            display: none;
         }
 
         @media screen and (min-width: 1024px) {
-            .wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 30px; padding: 40px; }
+            .wrapper { display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding: 20px; }
         }
     </style>
 </head>
@@ -60,148 +73,12 @@
 <div class="wrapper">
     <div class="panel">
         <h1>旗当番表作成</h1>
-        <label>A班 メンバー</label>
-        <textarea id="groupA" placeholder="名前を改行で入力"></textarea>
-        <label>B班 メンバー</label>
-        <textarea id="groupB" placeholder="名前を改行で入力"></textarea>
+        <label>A班 メンバー（5行）</label>
+        <textarea id="groupA" rows="5" placeholder="名前を改行で入力"></textarea>
+        
+        <label>B班 メンバー（5行）</label>
+        <textarea id="groupB" rows="5" placeholder="名前を改行で入力"></textarea>
+        
         <label>当番の日を選択</label>
         <div class="calendar-container">
             <div class="cal-header">
-                <span id="calMonth" style="font-weight:bold;"></span>
-                <div style="display:flex; gap:10px;">
-                    <button type="button" onclick="changeMonth(-1)" style="padding:5px 15px;">‹</button>
-                    <button type="button" onclick="changeMonth(1)" style="padding:5px 15px;">›</button>
-                </div>
-            </div>
-            <div id="calGrid" class="cal-grid"></div>
-        </div>
-        <label>備考</label>
-        <textarea id="bikouInput" placeholder="例：雨天決行です。都合が悪い場合は交代をお願いします。"></textarea>
-        <button class="btn btn-main" onclick="generateTable()">表を生成する</button>
-        <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
-    </div>
-    
-    <div id="print-area">
-        <div id="outTitle" style="font-weight:bold; text-align:center; margin-bottom:15px; font-size:18px;"></div>
-        <table>
-            <tbody id="tableBody"></tbody>
-        </table>
-        <div id="outBikou"></div>
-    </div>
-</div>
-
-<script>
-    var selectedDates = {};
-    var currentViewDate = new Date();
-    var selectedNameEl = null;
-
-    window.onload = function() {
-        ['groupA', 'groupB', 'bikouInput'].forEach(function(k) {
-            var saved = localStorage.getItem(k);
-            if(saved) document.getElementById(k).value = saved;
-        });
-        renderCalendar();
-    };
-
-    function renderCalendar() {
-        var grid = document.getElementById('calGrid');
-        var monthLabel = document.getElementById('calMonth');
-        grid.innerHTML = "";
-        var year = currentViewDate.getFullYear();
-        var month = currentViewDate.getMonth();
-        monthLabel.innerHTML = year + "年 " + (month + 1) + "月";
-        var days = ["日", "月", "火", "水", "木", "金", "土"];
-        for(var i=0; i<7; i++) {
-            var h = document.createElement('div');
-            h.className = 'cal-head-cell' + (i==0?' sun':(i==6?' sat':''));
-            h.innerHTML = days[i];
-            grid.appendChild(h);
-        }
-        var firstDay = new Date(year, month, 1).getDay();
-        var lastDate = new Date(year, month + 1, 0).getDate();
-        for(var j=0; j<firstDay; j++) grid.appendChild(document.createElement('div'));
-        for(var d=1; d<=lastDate; d++) {
-            (function(dateNum) {
-                var cell = document.createElement('div');
-                var dObj = new Date(year, month, dateNum);
-                var dow = dObj.getDay();
-                var dateKey = year + "-" + (month+1) + "-" + dateNum;
-                cell.className = 'cal-cell' + (dow==0?' sun':(dow==6?' sat':''));
-                if(selectedDates[dateKey]) cell.className += ' selected';
-                cell.innerHTML = dateNum;
-                cell.onclick = function() {
-                    if(selectedDates[dateKey]) { delete selectedDates[dateKey]; this.classList.remove('selected'); }
-                    else { selectedDates[dateKey] = true; this.classList.add('selected'); }
-                };
-                grid.appendChild(cell);
-            })(d);
-        }
-    }
-
-    function changeMonth(n) { currentViewDate.setMonth(currentViewDate.getMonth() + n); renderCalendar(); }
-
-    function generateTable() {
-        var memA = document.getElementById('groupA').value.split('\n').filter(function(v){return v!==""});
-        var memB = document.getElementById('groupB').value.split('\n').filter(function(v){return v!==""});
-        var bText = document.getElementById('bikouInput').value;
-        var dates = Object.keys(selectedDates).sort(function(a,b){
-            return new Date(a.replace(/-/g,'/')) - new Date(b.replace(/-/g,'/'));
-        });
-        if(!dates.length) { alert("日付を選んでください"); return; }
-        
-        localStorage.setItem('groupA', document.getElementById('groupA').value);
-        localStorage.setItem('groupB', document.getElementById('groupB').value);
-        localStorage.setItem('bikouInput', bText);
-
-        var tbody = document.getElementById('tableBody');
-        tbody.innerHTML = "<tr><th>日付</th><th>当番1</th><th>当番2</th></tr>";
-        
-        for(var i=0; i<dates.length; i++) {
-            var d = new Date(dates[i].replace(/-/g,'/'));
-            var row = tbody.insertRow();
-            var dayNames = ["日","月","火","水","木","金","土"];
-            var c1 = row.insertCell(0);
-            c1.innerHTML = (d.getMonth()+1)+"/"+d.getDate()+"("+dayNames[d.getDay()]+")";
-            if(d.getDay()==0) c1.style.color = "red";
-            if(d.getDay()==6) c1.style.color = "blue";
-            
-            row.insertCell(1).innerHTML = '<span class="name-tag" onclick="handleSwap(this)">' + memA[i%memA.length] + '</span>';
-            row.insertCell(2).innerHTML = '<span class="name-tag" onclick="handleSwap(this)">' + memB[i%memB.length] + '</span>';
-        }
-        document.getElementById('outTitle').innerHTML = (new Date(dates[0].replace(/-/g,'/')).getMonth()+1) + "月 旗当番表";
-        
-        // 備考の反映（文字色を赤に変更）
-        var outBikou = document.getElementById('outBikou');
-        if(bText.trim()) {
-            outBikou.style.display = "block";
-            outBikou.innerHTML = "<strong>【備考】</strong><br>" + bText;
-        } else {
-            outBikou.style.display = "none";
-        }
-    }
-
-    function handleSwap(el) {
-        if (!selectedNameEl) { selectedNameEl = el; el.classList.add('active'); }
-        else if (selectedNameEl === el) { el.classList.remove('active'); selectedNameEl = null; }
-        else {
-            var temp = el.innerHTML;
-            el.innerHTML = selectedNameEl.innerHTML;
-            selectedNameEl.innerHTML = temp;
-            selectedNameEl.classList.remove('active');
-            selectedNameEl = null;
-        }
-    }
-
-    function saveAsImage() {
-        var element = document.getElementById('print-area');
-        // 画像生成時に備考欄も含めてキャプチャされる
-        html2canvas(element, {scale:2, backgroundColor:'#ffffff'}).then(function(canvas) {
-            var link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = '旗当番表.png';
-            link.click();
-        });
-    }
-</script>
-</body>
-</html>
