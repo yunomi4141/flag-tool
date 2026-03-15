@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旗当番表作成ツール</title>
+    <title>旗当番表ジェネレーター</title>
     <script>
         if (navigator.userAgent.indexOf('Line') > -1 && !location.search.includes('openExternalBrowser=1')) {
             location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
@@ -37,10 +37,10 @@
 <body>
 
 <div class="container">
-    <h1>旗当番表作成ツール</h1>
+    <h1>旗当番表ジェネレーター</h1>
     <label>メンバー（1行に1人）</label>
-    <textarea id="members" rows="5" placeholder="名前を入力"></textarea>
-    <label>当番の日を選択（祝日は赤字）</label>
+    <textarea id="members" rows="5" placeholder="田中&#10;佐藤&#10;鈴木"></textarea>
+    <label>当番の日を選択</label>
     <div id="calendar" class="date-grid"></div>
     <label>備考1（通常）</label>
     <input type="text" id="bikou1">
@@ -83,26 +83,35 @@
             dEl.innerHTML = i + (holiday ? `<span class="holiday-name">${holiday}</span>` : '');
             dEl.onclick = () => {
                 dEl.classList.toggle('selected');
-                const dStr = `${month + 1}/${i}`;
-                if (dEl.classList.contains('selected')) selectedDates.push(dStr);
-                else selectedDates = selectedDates.filter(d => d !== dStr);
+                const dStr = (month + 1) + '/' + i;
+                if (dEl.classList.contains('selected')) {
+                    if (!selectedDates.includes(dStr)) selectedDates.push(dStr);
+                } else {
+                    selectedDates = selectedDates.filter(d => d !== dStr);
+                }
             };
             calendarEl.appendChild(dEl);
         }
     }
 
     function generateTable() {
-        const mems = document.getElementById('members').value.split('\n').filter(n => n.trim());
-        if (!mems.length || !selectedDates.length) return alert("入力不足です");
+        const mems = document.getElementById('members').value.split('\n').map(n => n.trim()).filter(n => n);
+        if (!mems.length || !selectedDates.length) return alert("メンバーと日付を入力してください");
         
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = "";
-        selectedDates.sort((a,b) => new Date('2026/'+a) - new Date('2026/'+b));
+        
+        // 日付順にソート（2026年想定）
+        selectedDates.sort((a, b) => {
+            const da = a.split('/'); const db = b.split('/');
+            return new Date(2026, da[0]-1, da[1]) - new Date(2026, db[0]-1, db[1]);
+        });
 
+        // 二人体制のコアロジック
         selectedDates.forEach((date, i) => {
-            const a = mems[(i * 2) % mems.length];
-            const b = mems[(i * 2 + 1) % mems.length];
-            tbody.innerHTML += `<tr><td>${date}</td><td>${a}</td><td>${b}</td></tr>`;
+            const personA = mems[(i * 2) % mems.length];
+            const personB = mems[(i * 2 + 1) % mems.length];
+            tbody.innerHTML += `<tr><td>${date}</td><td>${personA}</td><td>${personB}</td></tr>`;
         });
 
         document.getElementById('out-bikou1').innerText = document.getElementById('bikou1').value;
@@ -112,10 +121,10 @@
     }
 
     async function saveAsImage() {
-        const canvas = await html2canvas(document.getElementById('capture-area'), { scale: 2 });
+        const canvas = await html2canvas(document.getElementById('capture-area'), { scale: 2, backgroundColor: "#ffffff" });
         const link = document.createElement('a');
         link.download = `旗当番表.png`;
-        link.href = canvas.toDataURL();
+        link.href = canvas.toDataURL("image/png");
         link.click();
     }
     initCalendar();
