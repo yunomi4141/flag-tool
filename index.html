@@ -17,6 +17,8 @@
         .container { width: 100%; max-width: 450px; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         h1 { font-size: 1.2rem; text-align: center; color: var(--primary); margin-top: 0; }
         label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.9rem; }
+        .flex-row { display: flex; gap: 10px; }
+        .flex-row div { flex: 1; }
         textarea, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .date-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 5px; }
         .date-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; font-size: 0.8rem; border: 1px solid #eee; position: relative; flex-direction: column; }
@@ -38,10 +40,21 @@
 
 <div class="container">
     <h1>旗当番作成ツール</h1>
-    <label>メンバー（1行に1人）</label>
-    <textarea id="members" rows="5" placeholder="名前を1行ずつ入力"></textarea>
+    
+    <div class="flex-row">
+        <div>
+            <label>当番Aのメンバー</label>
+            <textarea id="membersA" rows="5" placeholder="名前を1行ずつ"></textarea>
+        </div>
+        <div>
+            <label>当番Bのメンバー</label>
+            <textarea id="membersB" rows="5" placeholder="名前を1行ずつ"></textarea>
+        </div>
+    </div>
+
     <label>当番の日を選択（祝日は赤字）</label>
     <div id="calendar" class="date-grid"></div>
+
     <label>備考1（集合場所など）</label>
     <input type="text" id="bikou1">
     <label>備考2（重要・赤字）</label>
@@ -51,7 +64,7 @@
 
 <div id="result-container">
     <div id="capture-area">
-        <h2 id="out-title" style="text-align: center; margin-top: 0; color: black;">旗当番表</h2>
+        <h2 style="text-align: center; margin-top: 0; color: black;">旗当番表</h2>
         <table class="output-table">
             <thead>
                 <tr><th style="width: 30%;">日付</th><th>当番A</th><th>当番B</th></tr>
@@ -95,8 +108,12 @@
     }
 
     function generateTable() {
-        const mems = document.getElementById('members').value.split('\n').map(n => n.trim()).filter(n => n);
-        if (!mems.length || !selectedDates.length) return alert("入力が不足しています");
+        const memsA = document.getElementById('membersA').value.split('\n').map(n => n.trim()).filter(n => n);
+        const memsB = document.getElementById('membersB').value.split('\n').map(n => n.trim()).filter(n => n);
+        
+        if (!memsA.length || !memsB.length || !selectedDates.length) {
+            return alert("A班・B班のメンバーと日付をすべて入力してください");
+        }
         
         const tbody = document.getElementById('table-body');
         tbody.innerHTML = "";
@@ -106,11 +123,11 @@
             return new Date(2026, da[0]-1, da[1]) - new Date(2026, db[0]-1, db[1]);
         });
 
-        // 二人体制のロジック
+        // それぞれのリストから1名ずつ割り当て
         selectedDates.forEach((date, i) => {
-            const indexA = (i * 2) % mems.length;
-            const indexB = (i * 2 + 1) % mems.length;
-            tbody.innerHTML += `<tr><td>${date}</td><td>${mems[indexA]}</td><td>${mems[indexB]}</td></tr>`;
+            const pA = memsA[i % memsA.length];
+            const pB = memsB[i % memsB.length];
+            tbody.innerHTML += `<tr><td>${date}</td><td>${pA}</td><td>${pB}</td></tr>`;
         });
 
         document.getElementById('out-bikou1').innerText = document.getElementById('bikou1').value;
@@ -122,8 +139,7 @@
     async function saveAsImage() {
         const canvas = await html2canvas(document.getElementById('capture-area'), { 
             scale: 2, 
-            backgroundColor: "#ffffff",
-            useCORS: true 
+            backgroundColor: "#ffffff"
         });
         const link = document.createElement('a');
         link.download = `旗当番表.png`;
