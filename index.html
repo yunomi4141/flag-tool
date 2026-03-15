@@ -12,24 +12,30 @@
             --highlight: #fff9c4;
         }
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .wrapper { width: 100%; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .panel { background: var(--card); border-radius: 12px; padding: 15px; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h1 { font-size: 16px; margin: 0 0 12px; text-align: center; }
         
         label { font-size: 11px; font-weight: bold; color: var(--text-s); margin-bottom: 4px; display: block; }
+        
+        /* ★オートリサイズに対応したtextareaのスタイル */
         textarea { 
             width: 100%; 
-            height: 90px; 
+            min-height: 60px; /* ★初期の高さを設定 */
             border: 1px solid var(--border); 
             border-radius: 8px; 
             padding: 10px; 
             margin-bottom: 12px; 
             font-size: 16px; 
-            line-height: 1.4;
+            line-height: 1.5; /* ★行間を少し広げて可読性をアップ */
             resize: none;
             display: block;
+            overflow: hidden; /* ★スクロールバーを非表示に */
+            outline: none;
+            -webkit-appearance: none;
         }
+        textarea:focus { border-color: var(--accent); }
         
         .calendar-container { border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 12px; background: #fff; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -40,47 +46,70 @@
         .selected { background: var(--text) !important; color: #fff !important; font-weight: bold; }
         .sun { color: var(--red); } .sat { color: var(--blue); }
 
+        .btn-group { margin-top: 5px; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; margin-bottom: 10px; font-size: 16px; cursor: pointer; }
         .btn-main { background: var(--accent); color: white; }
         .btn-sub { background: white; color: var(--accent); border: 1px solid var(--accent); }
 
+        /* プレビューエリア */
         #print-area { background: #fff; width: 100%; max-width: 500px; padding: 30px 15px; margin: 20px auto; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-        th { border-bottom: 1.5px solid #000; padding: 10px 0; }
+        th { border-bottom: 1.5px solid #000; padding: 10px 0; font-weight: bold; }
         td { border-bottom: 1px solid #f0f0f5; padding: 12px 0; text-align: center; }
+
         .name-tag { display: inline-block; width: 90%; padding: 8px 0; border-radius: 6px; cursor: pointer; }
         .name-tag.active { background: var(--highlight); font-weight: bold; outline: 2px solid #ffcc00; }
-        #outBikou { margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; font-size: 13px; color: var(--red) !important; white-space: pre-wrap; display: none; }
+
+        /* 備考欄（赤色） */
+        #outBikou { 
+            margin-top: 25px; 
+            padding-top: 15px; 
+            border-top: 1px solid #eee; 
+            font-size: 13px; 
+            color: var(--red) !important; 
+            white-space: pre-wrap; 
+            line-height: 1.6;
+            display: none;
+        }
     </style>
 </head>
 <body>
 <div class="wrapper">
     <div class="panel">
         <h1>旗当番表作成</h1>
+        
         <label>A班 メンバー</label>
-        <textarea id="groupA"></textarea>
+        <textarea id="groupA" oninput="autoResize(this)" placeholder="名前を改行で入力"></textarea>
+        
         <label>B班 メンバー</label>
-        <textarea id="groupB"></textarea>
+        <textarea id="groupB" oninput="autoResize(this)" placeholder="名前を改行で入力"></textarea>
+        
         <label>当番の日を選択</label>
         <div class="calendar-container">
             <div class="cal-header">
                 <span id="calMonth" class="cal-month-label"></span>
-                <div>
-                    <button type="button" onclick="changeMonth(-1)" style="padding:5px 10px;">‹</button>
-                    <button type="button" onclick="changeMonth(1)" style="padding:5px 10px;">›</button>
+                <div style="display:flex; gap:8px;">
+                    <button type="button" onclick="changeMonth(-1)" style="padding:5px 10px; border-radius:6px; border:1px solid var(--border); background:#fff;">‹</button>
+                    <button type="button" onclick="changeMonth(1)" style="padding:5px 10px; border-radius:6px; border:1px solid var(--border); background:#fff;">›</button>
                 </div>
             </div>
             <div id="calGrid" class="cal-grid"></div>
         </div>
+        
         <label>備考</label>
-        <textarea id="bikouInput"></textarea>
-        <button class="btn btn-main" onclick="generateTable()">表を生成する</button>
-        <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
+        <textarea id="bikouInput" oninput="autoResize(this)" placeholder="備考を入力"></textarea>
+        
+        <div class="btn-group">
+            <button class="btn btn-main" onclick="generateTable()">表を生成する</button>
+            <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
+        </div>
     </div>
     
     <div id="print-area">
         <div id="outTitle" style="font-weight:bold; text-align:center; margin-bottom:15px; font-size:18px;"></div>
-        <table><tbody id="tableBody"></tbody></table>
+        <table>
+            <tbody id="tableBody"></tbody>
+        </table>
         <div id="outBikou"></div>
     </div>
 </div>
@@ -90,10 +119,18 @@
     var currentViewDate = new Date();
     var selectedNameEl = null;
 
+    // ★オートリサイズのJavaScript関数
+    function autoResize(el) {
+        el.style.height = 'auto'; // 一旦高さをリセット
+        el.style.height = el.scrollHeight + 'px'; // 内容に合わせて高さを設定
+    }
+
     window.onload = function() {
         ['groupA', 'groupB', 'bikouInput'].forEach(function(k) {
             var saved = localStorage.getItem(k);
             if(saved) document.getElementById(k).value = saved;
+            // ★保存された内容に合わせて、初期読み込み時にもオートリサイズを適用
+            autoResize(document.getElementById(k));
         });
         renderCalendar();
     };
@@ -151,6 +188,7 @@
 
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = "<tr><th>日付</th><th>当番1</th><th>当番2</th></tr>";
+        
         for(var i=0; i<dates.length; i++) {
             var d = new Date(dates[i].replace(/-/g,'/'));
             var row = tbody.insertRow();
@@ -159,17 +197,21 @@
             c1.innerHTML = (d.getMonth()+1)+"/"+d.getDate()+"("+dayNames[d.getDay()]+")";
             if(d.getDay()==0) c1.style.color = "var(--red)";
             if(d.getDay()==6) c1.style.color = "var(--blue)";
+            
             row.insertCell(1).innerHTML = '<span class="name-tag" onclick="handleSwap(this)">' + (memA[i%memA.length] || "-") + '</span>';
             row.insertCell(2).innerHTML = '<span class="name-tag" onclick="handleSwap(this)">' + (memB[i%memB.length] || "-") + '</span>';
         }
         document.getElementById('outTitle').innerHTML = (new Date(dates[0].replace(/-/g,'/')).getMonth()+1) + "月 旗当番表";
+        
         var outBikou = document.getElementById('outBikou');
         if(bText.trim()) {
             outBikou.style.display = "block";
+            outBikou.style.setProperty('color', 'var(--red)', 'important');
             outBikou.innerHTML = "<strong style='color:var(--red) !important;'>【備考】</strong><br>" + bText;
         } else {
             outBikou.style.display = "none";
         }
+        
         document.getElementById('print-area').scrollIntoView({ behavior: 'smooth' });
     }
 
