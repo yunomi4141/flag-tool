@@ -18,7 +18,6 @@
         label { font-size: 11px; font-weight: bold; color: var(--text-s); margin-bottom: 5px; display: block; }
         textarea { width: 100%; height: 80px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; background: #fff; }
         
-        /* カレンダー表示 */
         .calendar-container { border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 20px; background: #fff; }
         .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
@@ -31,21 +30,24 @@
         .btn-main { background: var(--accent); color: white; }
         .btn-sub { background: white; color: var(--accent); border: 1px solid var(--accent); }
 
-        /* プレビュー表 */
-        #print-area { background: #fff; width: 100%; max-width: 500px; padding: 20px 10px; margin: 0 auto; border-radius: 8px; }
+        /* プレビューエリア */
+        #print-area { background: #fff; width: 100%; max-width: 500px; padding: 25px 15px; margin: 0 auto; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
-        th { border-bottom: 1px solid #000; padding: 10px 0; }
+        th { border-bottom: 1.5px solid #000; padding: 10px 0; }
         td { border-bottom: 1px solid #f2f2f7; padding: 12px 0; text-align: center; }
 
-        /* ★入れ替え用の名前タグ（スマホ最適化） */
-        .name-tag { 
-            display: inline-block; width: 90%; padding: 8px 0; border-radius: 6px; 
-            cursor: pointer; user-select: none; -webkit-user-select: none;
-            touch-action: manipulation;
-        }
-        .name-tag.active { 
-            background: #ffcc00 !important; color: #000 !important; font-weight: bold; 
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+        .name-tag { display: inline-block; width: 90%; padding: 8px 0; border-radius: 6px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+        .name-tag.active { background: #ffcc00 !important; color: #000 !important; font-weight: bold; }
+
+        /* 備考欄のスタイル */
+        #outBikou { 
+            margin-top: 25px; 
+            padding-top: 15px; 
+            border-top: 1px solid #eee; 
+            font-size: 13px; 
+            color: #333; 
+            white-space: pre-wrap; 
+            line-height: 1.6;
         }
 
         @media screen and (min-width: 1024px) {
@@ -72,25 +74,28 @@
             </div>
             <div id="calGrid" class="cal-grid"></div>
         </div>
+        <label>備考</label>
+        <textarea id="bikouInput" placeholder="例：雨天決行です。都合が悪い場合は交代をお願いします。"></textarea>
         <button class="btn btn-main" onclick="generateTable()">表を生成する</button>
         <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
     </div>
+    
     <div id="print-area">
         <div id="outTitle" style="font-weight:bold; text-align:center; margin-bottom:15px; font-size:18px;"></div>
         <table>
             <tbody id="tableBody"></tbody>
         </table>
-        <div id="outBikou" style="margin-top:20px; padding-top:10px; border-top:1px solid #ddd; font-size:12px; color:red; white-space:pre-wrap; display:none;"></div>
+        <div id="outBikou"></div>
     </div>
 </div>
 
 <script>
     var selectedDates = {};
     var currentViewDate = new Date();
-    var selectedNameEl = null; // 入れ替え用
+    var selectedNameEl = null;
 
     window.onload = function() {
-        ['groupA', 'groupB'].forEach(function(k) {
+        ['groupA', 'groupB', 'bikouInput'].forEach(function(k) {
             var saved = localStorage.getItem(k);
             if(saved) document.getElementById(k).value = saved;
         });
@@ -137,6 +142,7 @@
     function generateTable() {
         var memA = document.getElementById('groupA').value.split('\n').filter(function(v){return v!==""});
         var memB = document.getElementById('groupB').value.split('\n').filter(function(v){return v!==""});
+        var bText = document.getElementById('bikouInput').value;
         var dates = Object.keys(selectedDates).sort(function(a,b){
             return new Date(a.replace(/-/g,'/')) - new Date(b.replace(/-/g,'/'));
         });
@@ -144,6 +150,7 @@
         
         localStorage.setItem('groupA', document.getElementById('groupA').value);
         localStorage.setItem('groupB', document.getElementById('groupB').value);
+        localStorage.setItem('bikouInput', bText);
 
         var tbody = document.getElementById('tableBody');
         tbody.innerHTML = "<tr><th>日付</th><th>当番1</th><th>当番2</th></tr>";
@@ -161,35 +168,35 @@
             row.insertCell(2).innerHTML = '<span class="name-tag" onclick="handleSwap(this)">' + memB[i%memB.length] + '</span>';
         }
         document.getElementById('outTitle').innerHTML = (new Date(dates[0].replace(/-/g,'/')).getMonth()+1) + "月 旗当番表";
+        
+        // 備考の反映
+        var outBikou = document.getElementById('outBikou');
+        if(bText.trim()) {
+            outBikou.style.display = "block";
+            outBikou.innerHTML = "<strong>【備考】</strong><br>" + bText;
+        } else {
+            outBikou.style.display = "none";
+        }
     }
 
-    // ★スマホ対応の入れ替え処理
     function handleSwap(el) {
-        if (!selectedNameEl) {
-            // 1人目の選択
-            selectedNameEl = el;
-            el.classList.add('active');
-        } else if (selectedNameEl === el) {
-            // 同じ人をタップしたら解除
-            el.classList.remove('active');
-            selectedNameEl = null;
-        } else {
-            // 2人目の選択 -> 入れ替え実行
+        if (!selectedNameEl) { selectedNameEl = el; el.classList.add('active'); }
+        else if (selectedNameEl === el) { el.classList.remove('active'); selectedNameEl = null; }
+        else {
             var temp = el.innerHTML;
             el.innerHTML = selectedNameEl.innerHTML;
             selectedNameEl.innerHTML = temp;
-            
-            // 状態をリセット
             selectedNameEl.classList.remove('active');
             selectedNameEl = null;
         }
     }
 
     function saveAsImage() {
-        html2canvas(document.getElementById('print-area'), {scale:2, backgroundColor:'#ffffff'}).then(function(canvas) {
+        var element = document.getElementById('print-area');
+        html2canvas(element, {scale:2, backgroundColor:'#ffffff'}).then(function(canvas) {
             var link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
-            link.download = '当番表.png';
+            link.download = '旗当番表.png';
             link.click();
         });
     }
