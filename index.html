@@ -28,3 +28,109 @@
         #capture-area { padding: 30px; background: white; border: 1px solid #eee; }
         .output-table { width: 100%; border-collapse: collapse; color: black; }
         .output-table th, .output-table td { border: 1px solid #333; padding: 12px; text-align: center; }
+        .output-table th { background: #f2f2f2; }
+        .bikou-area { margin-top: 20px; text-align: left; line-height: 1.6; }
+        .bikou-red { color: var(--accent); font-weight: bold; }
+        #save-btn { background: #2ecc71; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>旗当番作成ツール</h1>
+    <label>メンバー（1行に1人）</label>
+    <textarea id="members" rows="5" placeholder="名前を1行ずつ入力"></textarea>
+    <label>当番の日を選択（祝日は赤字）</label>
+    <div id="calendar" class="date-grid"></div>
+    <label>備考1（集合場所など）</label>
+    <input type="text" id="bikou1">
+    <label>備考2（重要・赤字）</label>
+    <input type="text" id="bikou2">
+    <button onclick="generateTable()">表を作成する</button>
+</div>
+
+<div id="result-container">
+    <div id="capture-area">
+        <h2 id="out-title" style="text-align: center; margin-top: 0; color: black;">旗当番表</h2>
+        <table class="output-table">
+            <thead>
+                <tr><th style="width: 30%;">日付</th><th>当番A</th><th>当番B</th></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+        <div class="bikou-area">
+            <div id="out-bikou1" style="color: black;"></div>
+            <div id="out-bikou2" class="bikou-red"></div>
+        </div>
+    </div>
+    <button id="save-btn" onclick="saveAsImage()">LINE配布用に保存</button>
+</div>
+
+<script>
+    let selectedDates = [];
+    const calendarEl = document.getElementById('calendar');
+
+    function initCalendar() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getDate() > 25 ? now.getMonth() + 1 : now.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        for (let i = 1; i <= lastDay; i++) {
+            const date = new Date(year, month, i);
+            const holiday = JapaneseHolidays.isHoliday(date);
+            const dEl = document.createElement('div');
+            dEl.className = 'date-item' + (holiday ? ' holiday' : '');
+            dEl.innerHTML = i + (holiday ? `<span class="holiday-name">${holiday}</span>` : '');
+            dEl.onclick = () => {
+                dEl.classList.toggle('selected');
+                const dStr = (month + 1) + '/' + i;
+                if (dEl.classList.contains('selected')) {
+                    if (!selectedDates.includes(dStr)) selectedDates.push(dStr);
+                } else {
+                    selectedDates = selectedDates.filter(d => d !== dStr);
+                }
+            };
+            calendarEl.appendChild(dEl);
+        }
+    }
+
+    function generateTable() {
+        const mems = document.getElementById('members').value.split('\n').map(n => n.trim()).filter(n => n);
+        if (!mems.length || !selectedDates.length) return alert("入力が不足しています");
+        
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = "";
+        
+        selectedDates.sort((a, b) => {
+            const da = a.split('/'); const db = b.split('/');
+            return new Date(2026, da[0]-1, da[1]) - new Date(2026, db[0]-1, db[1]);
+        });
+
+        // 二人体制のロジック
+        selectedDates.forEach((date, i) => {
+            const indexA = (i * 2) % mems.length;
+            const indexB = (i * 2 + 1) % mems.length;
+            tbody.innerHTML += `<tr><td>${date}</td><td>${mems[indexA]}</td><td>${mems[indexB]}</td></tr>`;
+        });
+
+        document.getElementById('out-bikou1').innerText = document.getElementById('bikou1').value;
+        document.getElementById('out-bikou2').innerText = document.getElementById('bikou2').value;
+        document.getElementById('result-container').style.display = "block";
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    async function saveAsImage() {
+        const canvas = await html2canvas(document.getElementById('capture-area'), { 
+            scale: 2, 
+            backgroundColor: "#ffffff",
+            useCORS: true 
+        });
+        const link = document.createElement('a');
+        link.download = `旗当番表.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+    initCalendar();
+</script>
+</body>
+</html>
