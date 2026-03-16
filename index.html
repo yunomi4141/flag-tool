@@ -102,7 +102,7 @@
         <input type="text" id="bikou2" placeholder="重要なお知らせなど赤字で表示">
         
         <div class="btn-group">
-            <button class="btn btn-main" onclick="generateTable()">表を表示する</button>
+            <button class="btn btn-main" onclick="generateTable()">表を作成する</button>
             <button class="btn btn-sub" onclick="saveAsImage()">画像として保存</button>
         </div>
     </div>
@@ -221,7 +221,7 @@
 
         document.getElementById('outTitle').innerHTML = (new Date(dates[0].replace(/-/g,'/')).getMonth()+1) + "月 旗当番表";
         document.getElementById('outBikou1').innerText = document.getElementById('bikou1').value;
-        document.getElementById('outBikou2').innerText = document.getElementById('bikou2').value ? "【重要】" + document.getElementById('bikou2').value : "";
+        document.getElementById('outBikou2').innerText = document.getElementById('bikou2').value ? "" + document.getElementById('bikou2').value : "";
         
         document.getElementById('print-area').style.display = "block";
         document.getElementById('print-area').scrollIntoView({ behavior: 'smooth' });
